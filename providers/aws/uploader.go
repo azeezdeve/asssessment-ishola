@@ -27,20 +27,43 @@ func New() internal.IUploader {
 
 // Upload: for uploding to s3 bucket and creating exponential delay
 func (a aws) Upload(ctx context.Context, request internal.UploadRequest) (internal.UploadResponse, error) {
-	maxDelay := 3
-	attempt := 3
-	duration := 30 * time.Second
-	delay := duration * (1 << attempt)
-	if delay > maxDelay {
-		return internal.UploadResponse{}, errors.New("max delay exceeded")
-	}
+	const (
+		baseDelay   = 500 * time.Millisecond
+		maxDelay    = 30 * time.Second
+		maxAttempts = 5
+	)
 
-	if err := quickUpload(ctx, &MockS3Client{
+	s3 := &MockS3Client{
 		AccessKey: a.AccessKey,
 		Secret:    a.Secret,
 		Bucket:    a.Bucket,
-	}, request.Path, request.Tags); err != nil {
-		return internal.UploadResponse{}, err
+	}
+
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+
+		// Try uploading
+		err := quickUpload(ctx, s3, request.Path, request.Tags)
+		if err == nil {
+			return internal.UploadResponse{}, nil
+		}
+
+		// If last attempt, stop
+		if attempt == maxAttempts-1 {
+			return internal.UploadResponse{}, fmt.Errorf("upload failed after retries: %w", err)
+		}
+
+		// Compute backoff
+		delay := baseDelay * (1 << attempt)
+		if delay > maxDelay {
+			delay = maxDelay
+		}
+
+		// Sleep
+		select {
+		case <-ctx.Done():
+			return internal.UploadResponse{}, ctx.Err()
+		case <-time.After(delay):
+		}
 	}
 	return internal.UploadResponse{}, nil
 }
