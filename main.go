@@ -24,11 +24,6 @@ import (
 */
 
 // ----------------- Current Quick Implementation (Refactor Target) -----------------
-
-var awsAccessKey = "AKIA_FAKE"
-var awsSecretKey = "SECRET_FAKE"
-var defaultBucket = "apeing-bucket"
-
 func main() {
 	if len(os.Args) < 3 {
 		fmt.Println("usage: go run main.go upload <path> [key=value,key2=value2]")
