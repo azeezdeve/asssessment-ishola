@@ -44,8 +44,6 @@ func main() {
 		if len(os.Args) >= 4 {
 			tags = parseTagsArg(os.Args[3])
 		}
-		_ = path
-		_ = tags
 
 		err := serv.Upload(ctx, path, tags)
 		if err != nil {
