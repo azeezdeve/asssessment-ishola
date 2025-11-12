@@ -13,19 +13,19 @@ type Uploader struct {
 	upload internal.IUploader
 }
 
-type Config func(Uploader)
+type Config func(*Uploader)
 
 func NewUpload(cnf ...Config) Uploader {
 	cng := Uploader{}
 	for _, c := range cnf {
-		c(cng)
+		c(&cng)
 	}
 
 	return cng
 }
 
 func WithUploader(data internal.IUploader) Config {
-	return func(cnf Uploader) {
+	return func(cnf *Uploader) {
 		cnf.upload = data
 	}
 }
