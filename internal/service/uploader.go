@@ -31,5 +31,9 @@ func WithUploader(data internal.IUploader) Config {
 }
 
 func (u Uploader) Upload(ctx context.Context, path string, tags map[string]string) error {
-	return nil
+	_, err := u.upload.Upload(ctx, internal.UploadRequest{
+		Path: path,
+		Tags: tags,
+	})
+	return err
 }
